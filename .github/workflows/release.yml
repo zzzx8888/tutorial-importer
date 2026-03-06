@@ -1,0 +1,35 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Archive Release
+      run: |
+        # Create a temporary directory structure for the zip
+        mkdir -p build/TutorialImporter
+        # Copy files to build directory, excluding git and github workflows
+        rsync -av --progress . build/TutorialImporter --exclude .git --exclude .github --exclude build
+        # Create the zip file
+        cd build
+        zip -r ../tutorial-importer.zip TutorialImporter
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: tutorial-importer.zip
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

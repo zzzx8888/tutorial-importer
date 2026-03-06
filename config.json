@@ -1,0 +1,78 @@
+{
+    "name": "Tutorial Importer",
+    "description": "将教程 markdown 文件导入到 Xboard 知识库，并支持 Git 同步。",
+    "version": "1.1.1",
+    "type": "feature",
+    "code": "tutorial_importer",
+    "author": "User",
+    "require": {
+        "php": ">=8.1"
+    },
+    "config": {
+        "repository_url": {
+            "type": "text",
+            "name": "远程仓库地址",
+            "description": "Git 仓库 URL（例如 https://github.com/user/repo.git）。若留空则使用本地目录。",
+            "default": ""
+        },
+        "branch": {
+             "type": "text",
+             "name": "分支名称",
+             "description": "要拉取的 Git 分支（默认：main）",
+             "default": "main"
+        },
+        "sync_interval": {
+            "type": "select",
+            "name": "同步频率",
+            "description": "设置自动同步的频率。每天同步将在 00:00 执行，每周同步将在周一 00:00 执行。",
+            "options": [
+                {
+                    "value": "never",
+                    "label": "从不（仅手动）"
+                },
+                {
+                    "value": "daily",
+                    "label": "每天 (00:00)"
+                },
+                {
+                    "value": "weekly",
+                    "label": "每周 (周一 00:00)"
+                }
+            ],
+            "default": "never"
+        },
+        "immediate_import": {
+            "type": "select",
+            "name": "立即执行导入",
+            "description": "选择“是”并保存，系统将在1分钟内执行一次同步导入任务，完成后此选项会自动重置为“否”。",
+            "options": [
+                {
+                    "value": "0",
+                    "label": "否"
+                },
+                {
+                    "value": "1",
+                    "label": "是"
+                }
+            ],
+            "default": "0"
+        },
+        "update_action": {
+            "type": "select",
+            "name": "插件更新操作",
+            "description": "选择操作并保存。'检查更新'会将结果写入下方状态栏；'立即更新'会自动下载并覆盖插件文件。",
+            "options": [
+                { "value": "none", "label": "无操作" },
+                { "value": "check", "label": "检查更新" },
+                { "value": "update", "label": "立即更新" }
+            ],
+            "default": "none"
+        },
+        "update_status": {
+            "type": "text",
+            "name": "更新状态",
+            "description": "显示最近一次检查的结果 (只读)。",
+            "default": "未知"
+        }
+    }
+}
