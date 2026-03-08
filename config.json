@@ -73,6 +73,22 @@
             "name": "更新状态",
             "description": "显示最近一次检查的结果 (只读)。",
             "default": "未知"
+        },
+        "cleanup_action": {
+            "type": "select",
+            "name": "知识库清理",
+            "description": "选择“立即清空”并保存，将删除所有知识库文章及上传的图片资源。",
+            "options": [
+                { "value": "none", "label": "无操作" },
+                { "value": "clear", "label": "立即清空" }
+            ],
+            "default": "none"
+        },
+        "cleanup_status": {
+            "type": "text",
+            "name": "清理状态",
+            "description": "显示最近一次清理的结果 (只读)。",
+            "default": "未知"
         }
     }
 }

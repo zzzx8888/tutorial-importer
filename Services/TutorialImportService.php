@@ -157,7 +157,7 @@ class TutorialImportService
 
         // Process images
         $mdDir = dirname($mdPath);
-        $body = $this->processImages($body, $mdDir, $lang, $category);
+        $body = $this->processImages($body, $mdDir, $lang, $category, $item['title']);
 
         $knowledge = Knowledge::where('title', $item['title'])
             ->where('language', $lang)
@@ -180,9 +180,24 @@ class TutorialImportService
         }
     }
 
-    private function processImages(string $body, string $mdDir, string $lang, string $category): string
+    public function clearAll(): void
     {
-        return preg_replace_callback('/!\[(.*?)\]\((.*?)\)/', function ($matches) use ($mdDir, $lang, $category) {
+        // 1. Delete all knowledge entries (or just the ones created by this plugin? 
+        // User asked to "clear all knowledge base", assuming truncating the table is what they want for "purification")
+        Knowledge::truncate();
+
+        // 2. Delete the uploaded images directory
+        $storagePath = public_path('upload/knowledge');
+        if (File::exists($storagePath)) {
+            File::deleteDirectory($storagePath);
+        }
+
+        Log::info("Tutorial Import: Knowledge base cleared.");
+    }
+
+    private function processImages(string $body, string $mdDir, string $lang, string $category, string $tutorialTitle): string
+    {
+        return preg_replace_callback('/!\[(.*?)\]\((.*?)\)/', function ($matches) use ($mdDir, $lang, $category, $tutorialTitle) {
             $alt = $matches[1];
             $src = $matches[2];
 
@@ -194,17 +209,22 @@ class TutorialImportService
             // Local file processing
             $localPath = realpath($mdDir . '/' . $src);
             if ($localPath && File::exists($localPath)) {
-                $extension = File::extension($localPath);
-                $fileName = md5($localPath . time()) . '.' . $extension;
+                // Use original filename
+                $fileName = File::basename($localPath);
 
-                // Define storage path: public/upload/knowledge/{lang}/{category}/
-                $relativePath = "upload/knowledge/{$lang}/" . Str::slug($category);
+                // Define storage path: public/upload/knowledge/{lang}/{category_slug}/{tutorial_slug}/
+                // Using sub-folder for each tutorial to avoid filename conflicts
+                $categorySlug = Str::slug($category);
+                $tutorialSlug = Str::slug($tutorialTitle);
+                
+                $relativePath = "upload/knowledge/{$lang}/{$categorySlug}/{$tutorialSlug}";
                 $storagePath = public_path($relativePath);
 
                 if (!File::exists($storagePath)) {
                     File::makeDirectory($storagePath, 0755, true);
                 }
-
+                
+                // Copy file (overwrite if exists)
                 File::copy($localPath, $storagePath . '/' . $fileName);
 
                 $publicUrl = "/{$relativePath}/{$fileName}";

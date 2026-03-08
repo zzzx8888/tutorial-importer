@@ -106,6 +106,34 @@ class Plugin extends AbstractPlugin
             })->everyMinute();
         }
 
+        // Handle Knowledge Base Cleanup
+        if (isset($config['cleanup_action']) && $config['cleanup_action'] === 'clear') {
+            $schedule->call(function () {
+                try {
+                    Log::info('Tutorial Importer: Starting knowledge base cleanup...');
+                    $service = new TutorialImportService();
+                    $service->clearAll();
+
+                    $configService = app(PluginConfigService::class);
+                    $fullConfig = $configService->getDbConfig('tutorial_importer');
+                    $fullConfig['cleanup_action'] = 'none';
+                    $fullConfig['cleanup_status'] = "清理成功：" . now()->toDateTimeString();
+                    $configService->updateConfig('tutorial_importer', $fullConfig);
+
+                    Log::info('Tutorial Importer: Knowledge base cleanup completed.');
+                } catch (\Exception $e) {
+                    Log::error('Tutorial Importer: Cleanup failed: ' . $e->getMessage());
+                    try {
+                        $configService = app(PluginConfigService::class);
+                        $fullConfig = $configService->getDbConfig('tutorial_importer');
+                        $fullConfig['cleanup_action'] = 'none';
+                        $fullConfig['cleanup_status'] = "清理失败：" . $e->getMessage();
+                        $configService->updateConfig('tutorial_importer', $fullConfig);
+                    } catch (\Exception $ex) {}
+                }
+            })->everyMinute();
+        }
+
         // Handle Scheduled Sync
         $interval = $config['sync_interval'] ?? 'never';
         if ($interval !== 'never') {
